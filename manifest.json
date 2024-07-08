@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "TextMaster",
+	"name": "TextMaster",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "refining text app with ChatGPT api",
+	"author": "Gangyeol Kim <kkyy3402@naver.com>",
+	"authorUrl": "https://github.com/kkyy3402",
+	"fundingUrl": "https://github.com/kkyy3402",
 	"isDesktopOnly": false
 }
