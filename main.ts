@@ -1,4 +1,4 @@
-import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
+import { Editor, MarkdownView, Modifier, Notice, Plugin } from 'obsidian'
 import { callGptApiSync } from './utils/ApiUtils'
 import { ActionSelectionModal } from './components/modal/ActionSelectionModal'
 import { ApiKeySetupModal } from './components/modal/ApiKeySetupModal'
@@ -7,10 +7,12 @@ import { getPromptForTextGeneration } from './utils/PromptUtils'
 
 interface ITextMaseterSettings {
 	apiKey: string;
+	shortcutKey: string;
 }
 
 const DEFAULT_SETTINGS: ITextMaseterSettings = {
 	apiKey: '',
+	shortcutKey: 'Ctrl + Enter',
 }
 
 export default class TextMasterPlugin extends Plugin {
@@ -30,8 +32,8 @@ export default class TextMasterPlugin extends Plugin {
 
 			// streaming GPT
 			// callGptApiStream(prompt, apiKey, (data: string) => {
-			// 	editor.setValue(`${editor.getValue()}` + data)
-			// })
+			//     editor.setValue(`${editor.getValue()}` + data);
+			// });
 
 			new Notice('Creation is complete.')
 		}).open()
@@ -39,18 +41,18 @@ export default class TextMasterPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings()
+		this.updateCommandShortcut()
 
+		// Add settings tab
+		this.addSettingTab(new SettingTab(this.app, this))
+	}
 
-		// Command to trigger GPT API
+	updateCommandShortcut() {
 		this.addCommand({
 			id: 'trigger-gpt-api',
 			name: 'Trigger GPT API',
 			hotkeys: [
-				{
-					modifiers: ['Ctrl'],
-
-					key: 'Enter',
-				},
+				this.parseShortcutKey(this.settings.shortcutKey),
 			],
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				if (!this.settings.apiKey) {
@@ -63,9 +65,19 @@ export default class TextMasterPlugin extends Plugin {
 				this.showActionModal(editor)
 			},
 		})
+	}
 
-		// Add settings tab
-		this.addSettingTab(new SettingTab(this.app, this))
+	parseShortcutKey(shortcutKey: string) {
+		const parts = shortcutKey.split(' + ')
+		const key = parts.pop()
+		if (!key) {
+			throw new Error('Invalid shortcut key')
+		}
+		const modifiers = parts.map(part => part as Modifier)
+		return {
+			modifiers: modifiers,
+			key: key,
+		}
 	}
 
 	onunload() {
@@ -78,7 +90,4 @@ export default class TextMasterPlugin extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings)
 	}
-
 }
-
-
