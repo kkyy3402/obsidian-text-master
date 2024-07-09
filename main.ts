@@ -1,16 +1,18 @@
-import {App, Editor, MarkdownView, Modal, Plugin, PluginSettingTab, Setting} from 'obsidian';
-import {validateOpenAIApiKey} from "./utils/apiUtils";
+import {Editor, MarkdownView, Plugin} from 'obsidian';
+import {SettingTab} from "./components/SettingTab";
+import {SettingModal} from "./components/SettingModal";
+import {callGptApi} from "./utils/apiUtils";
 
-interface MyPluginSettings {
+interface ITextMaseterSettings {
 	apiKey: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: ITextMaseterSettings = {
 	apiKey: ''
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class TextMasterPlugin extends Plugin {
+	settings: ITextMaseterSettings;
 
 	getPromptForArrange = (inputText: string) => {
 		return `### Instruction:
@@ -44,8 +46,9 @@ ${inputText}
 				}
 				const userInput = editor.getValue()
 				const prompt = this.getPromptForArrange(userInput)
-				const response = await this.callGptApi(prompt);
-				editor.setValue(`${userInput}
+				const apiKey = this.settings.apiKey
+				const response = await callGptApi(prompt, apiKey);
+				editor.setValue(`${userInput} 
  
 ### GENERATED  
 ${response}`);
@@ -67,106 +70,6 @@ ${response}`);
 		await this.saveData(this.settings);
 	}
 
-	async callGptApi(prompt: string): Promise<string> {
-		const apiKey = this.settings.apiKey;
-		console.log('Calling GPT-4 API with prompt:', prompt);
-
-		const messages = [
-			{
-				role: 'system',
-				content: 'You are a helpful assistant.'
-			},
-			{
-				role: 'user',
-				content: prompt
-			}
-		];
-
-		const response = await fetch('https://api.openai.com/v1/chat/completions', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${apiKey}`
-			},
-			body: JSON.stringify({
-				model: 'gpt-4',
-				messages: messages,
-				max_tokens: 150
-			})
-		});
-
-		if (!response.ok) {
-			console.error('API call failed:', response.statusText);
-			throw new Error('API call failed');
-		}
-
-		const data = await response.json();
-		console.log('API response:', data);
-		return data.choices[0].message.content.trim();
-	}
-
 }
 
-class SettingModal extends Modal {
-	plugin: MyPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
-		super(app);
-		this.plugin = plugin;
-	}
-
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('API key is not set. Please go to the settings to configure your GPT API key.');
-
-		// Add a div for spacing
-		contentEl.createEl('br');
-
-		const buttonEl = contentEl.createEl('button', {text: 'Go to Settings'});
-		buttonEl.onclick = () => {
-			this.plugin.addSettingTab(new SettingTab(this.app, this.plugin));
-			this.close();
-		}
-	}
-
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
-}
-
-class SettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-
-	constructor(app: App, plugin: MyPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		const apiKeyStatus = document.createElement('div');
-		containerEl.appendChild(apiKeyStatus);
-
-		new Setting(containerEl)
-			.setName('GPT API Key')
-			.setDesc('Enter your GPT API key here')
-			.addText(text => text
-				.setPlaceholder('Enter your API key')
-				.setValue(this.plugin.settings.apiKey)
-				.onChange(async (value) => {
-					if (validateOpenAIApiKey(value)) {
-						apiKeyStatus.textContent = "올바른 api키 형식입니다.";
-						apiKeyStatus.style.color = 'green';
-						this.plugin.settings.apiKey = value;
-						await this.plugin.saveSettings();
-					} else {
-						apiKeyStatus.textContent = "잘못된 api 키입니다.";
-						apiKeyStatus.style.color = 'red';
-					}
-				}));
-	}
-}
