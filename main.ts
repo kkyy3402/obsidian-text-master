@@ -11,6 +11,17 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 
+	getPromptForArrange = (inputText: string) => {
+		return `### Instruction:
+다음 문장을 매끄럽게 정리해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
+
+### Input:
+${inputText}
+
+### Output: 
+`
+	}
+
 	async onload() {
 		console.info("HELLO!")
 		await this.loadSettings();
@@ -30,17 +41,13 @@ export default class MyPlugin extends Plugin {
 					new SettingModal(this.app, this).open();
 					return;
 				}
-				const selection = editor.getSelection();
-
-				let prompt = editor.getSelection();
-				if (!prompt) {
-					prompt = editor.getValue();  // Get the entire content if nothing is selected
-				}
-
-				console.info(`value : ${editor.getValue()}`)
-
-				const response = await this.callGptApi(selection);
-				editor.replaceSelection(response);
+				const userInput = editor.getValue()
+				const prompt = this.getPromptForArrange(userInput)
+				const response = await this.callGptApi(prompt);
+				editor.setValue(`${userInput}
+ 
+### GENERATED  
+${response}`);
 			}
 		});
 
@@ -63,15 +70,26 @@ export default class MyPlugin extends Plugin {
 		const apiKey = this.settings.apiKey;
 		console.log('Calling GPT-4 API with prompt:', prompt);
 
-		const response = await fetch('https://api.openai.com/v1/completions', {
+		const messages = [
+			{
+				role: 'system',
+				content: 'You are a helpful assistant.'
+			},
+			{
+				role: 'user',
+				content: prompt
+			}
+		];
+
+		const response = await fetch('https://api.openai.com/v1/chat/completions', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${apiKey}`
 			},
 			body: JSON.stringify({
-				model: 'gpt-4o',
-				prompt: prompt,
+				model: 'gpt-4',
+				messages: messages,
 				max_tokens: 150
 			})
 		});
@@ -83,7 +101,7 @@ export default class MyPlugin extends Plugin {
 
 		const data = await response.json();
 		console.log('API response:', data);
-		return data.choices[0].text.trim();
+		return data.choices[0].message.content.trim();
 	}
 
 }
