@@ -29,3 +29,4 @@ export class SettingTab extends PluginSettingTab {
 				}));
 	}
 }
+

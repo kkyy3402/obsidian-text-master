@@ -1,9 +1,9 @@
 import {Editor, MarkdownView, Notice, Plugin} from 'obsidian';
-import {SettingTab} from "./components/SettingTab";
 import {callGptApi} from "./utils/apiUtils";
-import {ActionSelectionModal} from "./components/ActionSelectionModal";
+import {ActionSelectionModal} from "./components/modal/ActionSelectionModal";
 import {actions} from "./constants";
 import {ApiKeySetupModal} from "./components/modal/ApiKeySetupModal";
+import {SettingTab} from "./components/SettingTab";
 
 interface ITextMaseterSettings {
 	apiKey: string;
@@ -16,11 +16,11 @@ const DEFAULT_SETTINGS: ITextMaseterSettings = {
 export default class TextMasterPlugin extends Plugin {
 	settings: ITextMaseterSettings;
 
-	getPromptForTextGeneration = (action: string, inputText: string) => {
+	getPromptForTextGeneration = (action: string, inputText: string, maxStrLength: number) => {
 
 		if (action === actions.rearrange) {
 			return `### Instruction:
-다음 문장을 매끄럽게 정리해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
+다음 문장을 매끄럽게 정리해주세요. 예시 데이터의 언어를 지켜서 ${maxStrLength}자 이내로 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
 
 ### Input:
 ${inputText}
@@ -31,7 +31,7 @@ ${inputText}
 
 		if (action === actions.summarization) {
 			return `### Instruction:
-다음 문장을 100자 이내로 요약해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
+다음 문장을 100자 이내로 요약해주세요. 예시 데이터의 언어를 지켜서 ${maxStrLength}자 이내로 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
 
 ### Input:
 ${inputText}
@@ -39,6 +39,18 @@ ${inputText}
 ### Output: 
 `
 		}
+
+		if (action === actions.augmentation) {
+			return `### Instruction:
+다음 문장 이후에 나올 문장을 원문을 제외하고 300자 이내로 생성해주세요. 예시 데이터의 언어를 지켜서 ${maxStrLength}자 이내로 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
+
+### Input:
+${inputText}
+
+### Output: 
+`
+		}
+
 
 		return `### Instruction:
 다음 문장을 100자 이내로 요약해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
@@ -52,11 +64,11 @@ ${inputText}
 
 	showActionModal = (editor: Editor) => {
 		const userInput = editor.getValue()
-		new ActionSelectionModal(this.app, async (action: string) => {
-			const prompt = this.getPromptForTextGeneration(action, userInput)
+		new ActionSelectionModal(this.app, async (action: string, maxStrLength: number) => {
+			const prompt = this.getPromptForTextGeneration(action, userInput, maxStrLength)
 			const apiKey = this.settings.apiKey;
 			const response = await callGptApi(prompt, apiKey);
-			new Notice('처리가 완료되었습니다.');
+			new Notice('생성이 완료되었습니다.');
 			editor.setValue(`${userInput}
   
 ### GENERATED  
