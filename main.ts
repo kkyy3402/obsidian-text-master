@@ -68,7 +68,7 @@ ${inputText}
 			const prompt = this.getPromptForTextGeneration(action, userInput, maxStrLength)
 			const apiKey = this.settings.apiKey;
 			const response = await callGptApi(prompt, apiKey);
-			new Notice('생성이 완료되었습니다.');
+			new Notice('Creation is complete.');
 			editor.setValue(`${userInput}
   
 ### GENERATED  

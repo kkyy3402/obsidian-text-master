@@ -59,7 +59,7 @@ export class ActionSelectionModal extends Modal {
 
 		const buttonSetting = new Setting(contentEl);
 		const generateButton = buttonSetting.addButton(button => {
-			button.setButtonText('생성 시작하기')
+			button.setButtonText('Start Gen')
 				.setDisabled(false)
 				.onClick(() => {
 					this.onChoose(selectedValue, maxStrLength);

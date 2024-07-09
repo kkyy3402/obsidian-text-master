@@ -16,7 +16,7 @@ export class ApiKeySetupModal extends Modal {
 
 	onOpen() {
 		const {contentEl} = this;
-		contentEl.createEl('h3', {text: 'ChatGPT API키를 입력해주세요.'});
+		contentEl.createEl('h3', {text: 'Please enter the ChatGPT API key.'});
 
 		// Create text field for API key input
 		new Setting(contentEl)
@@ -37,19 +37,19 @@ export class ApiKeySetupModal extends Modal {
 		new Setting(contentEl)
 			.addButton(button => {
 				button
-					.setButtonText("취소")
+					.setButtonText("Cancel")
 					.onClick(() => {
 						this.close()
 					})
 			})
 			.addButton(button => {
 				this.setButton = button;
-				button.setButtonText('확인')
+				button.setButtonText('Confirm')
 					.setDisabled(true)
 					.onClick(async () => {
 						this.plugin.settings.apiKey = this.apiKeyInput.getValue();
 						await this.plugin.saveSettings();
-						new Notice('API키가 입력되었습니다.');
+						new Notice('The API key has been entered.');
 						this.onConfirmButtonClicked();
 						this.close();
 					});
