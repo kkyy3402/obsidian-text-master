@@ -4,18 +4,18 @@ const getInstructionText = (action: string, maxOutputStrLength: number) => {
 	let result = ''
 
 	if (action === actions.rearrange) {
-		result = '다음 문장을 매끄럽게 정리해주세요.'
+		result = 'Please rearrange the following sentences smoothly.'
 	}
 
 	if (action === actions.summarization) {
-		result = '다음 문장을 요약해주세요.'
+		result = 'Please summarize the following sentences.'
 	}
 
 	if (action === actions.augmentation) {
-		result = '다음 문장 이후에 나올 문장을 원문을 제외하고 생성해주세요.'
+		result = 'Please generate sentences that follow the given sentence, excluding the original.'
 	}
 
-	result = result + ` 결과는 ${maxOutputStrLength}자 이내로 작성해주세요.`
+	result = result + ` Please limit the result to within ${maxOutputStrLength} characters.`
 
 	return result
 }
@@ -31,3 +31,4 @@ ${inputText}
 ### Output: 
 `
 }
+ 

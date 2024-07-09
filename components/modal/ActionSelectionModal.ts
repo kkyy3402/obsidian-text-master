@@ -11,19 +11,19 @@ export class ActionSelectionModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this
-		contentEl.createEl('h3', { text: '원하시는 작업을 선택해주세요.' })
+		contentEl.createEl('h3', { text: 'Please select the desired action.' })
 
 		let selectedValue = actions.rearrange
 		let maxOutputStrLength = DEFAULT_MAX_GENERATION_STR_LENGTH
 
 		new Setting(contentEl)
-			.setName('작업 선택')
-			.setDesc('원하는 작업을 선택하세요.')
+			.setName('Select Action')
+			.setDesc('Choose the action you want.')
 			.addDropdown(dropdown => {
 				[
-					{ value: actions.rearrange, text: '내용 재구성 - 주어진 내용을 재구성합니다.' },
-					{ value: actions.summarization, text: '요약 - 주어진 문장을 요약합니다.' },
-					{ value: actions.augmentation, text: '증강 - 주어진 문장을 증강합니다.' },
+					{ value: actions.rearrange, text: 'Rearrange - Rearrange the given content.' },
+					{ value: actions.summarization, text: 'Summarize - Summarize the given sentences.' },
+					{ value: actions.augmentation, text: 'Augment - Augment the given sentences.' },
 				].forEach(option => {
 					dropdown.addOption(option.value, option.text)
 				})
@@ -34,10 +34,10 @@ export class ActionSelectionModal extends Modal {
 			})
 
 		new Setting(contentEl)
-			.setName('최대 문자열 길이')
-			.setDesc('생성되는 문자열의 길이를 제한합니다.')
+			.setName('Max String Length')
+			.setDesc('Limit the length of the generated string.')
 			.addText(text => {
-				text.setPlaceholder('길이를 입력해주세요.')
+				text.setPlaceholder('Enter the length.')
 				text.inputEl.type = 'number'
 				text.setValue(`${DEFAULT_MAX_GENERATION_STR_LENGTH}`)
 				text.onChange(value => {

@@ -16,7 +16,7 @@ export class ApiKeySetupModal extends Modal {
 
 	onOpen() {
 		const { contentEl } = this
-		contentEl.createEl('h3', { text: 'Please enter the ChatGPT API key.' })
+		contentEl.createEl('h3', { text: 'Please enter the ChatGPT API key' })
 
 		// Create text field for API key input
 		new Setting(contentEl)
@@ -25,7 +25,7 @@ export class ApiKeySetupModal extends Modal {
 				this.apiKeyInput = text
 				text.setPlaceholder('Enter your API key')
 					.onChange(value => {
-						if (validateOpenAIApiKey(value)) { // Assuming API key length is 32 for example
+						if (validateOpenAIApiKey(value)) {
 							this.setButton.setDisabled(false)
 						} else {
 							this.setButton.setDisabled(true)
