@@ -1,18 +1,20 @@
 import { Editor, MarkdownView, Modifier, Notice, Plugin } from 'obsidian'
-import { callGptApiSync } from './utils/ApiUtils'
 import { ActionSelectionModal } from './components/modal/ActionSelectionModal'
 import { ApiKeySetupModal } from './components/modal/ApiKeySetupModal'
 import { SettingTab } from './components/SettingTab'
 import { getPromptForTextGeneration } from './utils/PromptUtils'
+import { callGptApiStream, callGptApiSync } from './utils/ApiUtils'
 
 interface ITextMaseterSettings {
 	apiKey: string;
 	shortcutKey: string;
+	streaming: boolean;
 }
 
 const DEFAULT_SETTINGS: ITextMaseterSettings = {
 	apiKey: '',
 	shortcutKey: 'Ctrl + Enter',
+	streaming: true,
 }
 
 export default class TextMasterPlugin extends Plugin {
@@ -26,14 +28,18 @@ export default class TextMasterPlugin extends Plugin {
 
 			editor.setValue(`${userInput}\n\n### GENERATED\n\n`)
 
-			// Sync GPT
-			const syncResponse = await callGptApiSync(prompt, apiKey)
-			editor.setValue(`${editor.getValue()}` + syncResponse)
-
-			// streaming GPT
-			// callGptApiStream(prompt, apiKey, (data: string) => {
-			//     editor.setValue(`${editor.getValue()}` + data);
-			// });
+			// STREAMING
+			if (this.settings.streaming) {
+				// streaming GPT
+				callGptApiStream(prompt, apiKey, (data: string) => {
+					editor.setValue(`${editor.getValue()}` + data)
+				})
+			}
+			// NON-STREAMING
+			else {
+				const syncResponse = await callGptApiSync(prompt, apiKey)
+				editor.setValue(`${editor.getValue()}` + syncResponse)
+			}
 
 			new Notice('Creation is complete.')
 		}).open()

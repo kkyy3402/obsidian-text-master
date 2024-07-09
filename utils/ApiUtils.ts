@@ -41,8 +41,6 @@ export const callGptApiSync = async (prompt: string, apiKey: string): Promise<st
 }
 
 export const callGptApiStream = async (prompt: string, apiKey: string, onData: (data: string) => void) => {
-	// console.log('Calling GPT-4 API with prompt:', prompt)
-
 	let accumulatedString = ''
 	const messages = [
 		{
@@ -62,7 +60,7 @@ export const callGptApiStream = async (prompt: string, apiKey: string, onData: (
 			'Authorization': `Bearer ${apiKey}`,
 		},
 		body: JSON.stringify({
-			model: 'gpt-4o',
+			model: 'gpt-4',
 			messages: messages,
 			stream: true,
 		}),
@@ -80,22 +78,37 @@ export const callGptApiStream = async (prompt: string, apiKey: string, onData: (
 
 	const reader = response.body.getReader()
 	const decoder = new TextDecoder('utf-8')
-	
+	let buffer = ''
+
 	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		const { done, value } = await reader.read()
 		if (done) break
-		const chunk = decoder.decode(value, { stream: true })
 
-		const resJsonStr = chunk.split('data: ')[1]
-		const resJson = JSON.parse(resJsonStr)
-		console.log('### JSON')
-		console.log(resJson)
-		const contentChar = resJson['choices'][0]['delta']['content']
-		accumulatedString = accumulatedString + contentChar
-		// console.log(`### contentChar : ${contentChar}`)
-		// console.log(`### accumulatedString : ${accumulatedString}`)
-		onData(contentChar)
+		buffer += decoder.decode(value, { stream: true })
+
+		const lines = buffer.split('\n')
+		buffer = lines.pop() || '' // Keep the last partial line in the buffer
+
+		for (const line of lines) {
+			if (line.trim() === '') continue // Skip empty lines
+			if (line.startsWith('data: ')) {
+				const jsonString = line.replace(/^data: /, '').trim()
+				if (jsonString !== '[DONE]') {
+					try {
+						const parsedJson = JSON.parse(jsonString)
+						const contentChar = parsedJson.choices[0].delta.content
+						if (contentChar) {
+							// eslint-disable-next-line @typescript-eslint/no-unused-vars
+							accumulatedString += contentChar
+							onData(contentChar)
+						}
+					} catch (e) {
+						console.error('Error parsing JSON:', e)
+					}
+				}
+			}
+		}
 	}
 
 	console.log('Stream ended')
