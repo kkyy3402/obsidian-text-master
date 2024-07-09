@@ -1,9 +1,9 @@
 import {Editor, MarkdownView, Notice, Plugin} from 'obsidian';
 import {SettingTab} from "./components/SettingTab";
-import {SettingModal} from "./components/SettingModal";
 import {callGptApi} from "./utils/apiUtils";
 import {ActionSelectionModal} from "./components/ActionSelectionModal";
 import {actions} from "./constants";
+import {ApiKeySetupModal} from "./components/modal/ApiKeySetupModal";
 
 interface ITextMaseterSettings {
 	apiKey: string;
@@ -50,6 +50,20 @@ ${inputText}
 `
 	}
 
+	showActionModal = (editor: Editor) => {
+		const userInput = editor.getValue()
+		new ActionSelectionModal(this.app, async (action: string) => {
+			const prompt = this.getPromptForTextGeneration(action, userInput)
+			const apiKey = this.settings.apiKey;
+			const response = await callGptApi(prompt, apiKey);
+			new Notice('처리가 완료되었습니다.');
+			editor.setValue(`${userInput}
+  
+### GENERATED  
+${response}`);
+		}).open();
+	}
+
 	async onload() {
 		console.info("HELLO!")
 		await this.loadSettings();
@@ -66,20 +80,13 @@ ${inputText}
 			],
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				if (!this.settings.apiKey) {
-					new SettingModal(this.app, this).open();
+					new ApiKeySetupModal(this.app, this, () => {
+						this.showActionModal(editor)
+					}).open()
 					return;
 				}
-				const userInput = editor.getValue()
-				new ActionSelectionModal(this.app, async (action: string) => {
-					const prompt = this.getPromptForTextGeneration(action, userInput)
-					const apiKey = this.settings.apiKey;
-					const response = await callGptApi(prompt, apiKey);
-					new Notice('처리가 완료되었습니다.');
-					editor.setValue(`${userInput}
-  
-### GENERATED  
-${response}`);
-				}).open();
+
+				this.showActionModal(editor)
 			}
 		});
 

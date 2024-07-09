@@ -1,5 +1,4 @@
 import {App, PluginSettingTab, Setting} from "obsidian";
-import {validateOpenAIApiKey} from "../utils/apiUtils";
 import TextMasterPlugin from "../main";
 
 export class SettingTab extends PluginSettingTab {
@@ -25,15 +24,8 @@ export class SettingTab extends PluginSettingTab {
 				.setPlaceholder('Enter your API key')
 				.setValue(this.plugin.settings.apiKey)
 				.onChange(async (value) => {
-					if (validateOpenAIApiKey(value)) {
-						apiKeyStatus.textContent = "올바른 api키 형식입니다.";
-						apiKeyStatus.style.color = 'green';
-						this.plugin.settings.apiKey = value;
-						await this.plugin.saveSettings();
-					} else {
-						apiKeyStatus.textContent = "잘못된 api 키입니다.";
-						apiKeyStatus.style.color = 'red';
-					}
+					this.plugin.settings.apiKey = value;
+					await this.plugin.saveSettings();
 				}));
 	}
 }
