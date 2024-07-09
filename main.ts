@@ -1,8 +1,9 @@
-import {Editor, MarkdownView, Plugin} from 'obsidian';
+import {Editor, MarkdownView, Notice, Plugin} from 'obsidian';
 import {SettingTab} from "./components/SettingTab";
 import {SettingModal} from "./components/SettingModal";
 import {callGptApi} from "./utils/apiUtils";
 import {ActionSelectionModal} from "./components/ActionSelectionModal";
+import {actions} from "./constants";
 
 interface ITextMaseterSettings {
 	apiKey: string;
@@ -15,8 +16,10 @@ const DEFAULT_SETTINGS: ITextMaseterSettings = {
 export default class TextMasterPlugin extends Plugin {
 	settings: ITextMaseterSettings;
 
-	getPromptForArrange = (inputText: string) => {
-		return `### Instruction:
+	getPromptForTextGeneration = (action: string, inputText: string) => {
+
+		if (action === actions.rearrange) {
+			return `### Instruction:
 다음 문장을 매끄럽게 정리해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
 
 ### Input:
@@ -24,9 +27,19 @@ ${inputText}
 
 ### Output: 
 `
-	}
+		}
 
-	getPromptForSummarize = (inputText: string) => {
+		if (action === actions.summarization) {
+			return `### Instruction:
+다음 문장을 100자 이내로 요약해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
+
+### Input:
+${inputText}
+
+### Output: 
+`
+		}
+
 		return `### Instruction:
 다음 문장을 100자 이내로 요약해주세요. 예시 데이터의 언어를 지켜서 작성해주세요. (영어일 경우 영어, 한글일 경우 한글)
 
@@ -57,17 +70,12 @@ ${inputText}
 					return;
 				}
 				const userInput = editor.getValue()
-				new ActionSelectionModal(this.app, async (choice: string) => {
-					let prompt = '';
-					if (choice === 'rearrange') {
-						prompt = this.getPromptForArrange(userInput);
-					} else if (choice === 'summarize') {
-						prompt = this.getPromptForSummarize(userInput);
-					}
-
+				new ActionSelectionModal(this.app, async (action: string) => {
+					const prompt = this.getPromptForTextGeneration(action, userInput)
 					const apiKey = this.settings.apiKey;
 					const response = await callGptApi(prompt, apiKey);
-					editor.setValue(`${userInput} 
+					new Notice('처리가 완료되었습니다.');
+					editor.setValue(`${userInput}
   
 ### GENERATED  
 ${response}`);

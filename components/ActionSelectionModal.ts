@@ -1,4 +1,5 @@
 import {App, Modal, Setting} from 'obsidian';
+import {actions} from "../constants";
 
 export class ActionSelectionModal extends Modal {
 	onChoose: (choice: string) => void;
@@ -10,7 +11,7 @@ export class ActionSelectionModal extends Modal {
 
 	onOpen() {
 		const {contentEl} = this;
-		contentEl.createEl('h2', {text: 'Choose an Action'});
+		contentEl.createEl('h3', {text: '원하시는 작업을 선택해주세요.'});
 
 		new Setting(contentEl)
 			.setName('내용 재구성')
@@ -18,7 +19,7 @@ export class ActionSelectionModal extends Modal {
 			.addButton(button => button
 				.setButtonText('Select')
 				.onClick(() => {
-					this.onChoose('rearrange');
+					this.onChoose(actions.rearrange);
 					this.close();
 				}));
 
@@ -28,7 +29,7 @@ export class ActionSelectionModal extends Modal {
 			.addButton(button => button
 				.setButtonText('Select')
 				.onClick(() => {
-					this.onChoose('summarize');
+					this.onChoose(actions.summarization);
 					this.close();
 				}));
 	}
