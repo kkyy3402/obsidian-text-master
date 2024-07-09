@@ -1,4 +1,5 @@
 import {App, Editor, MarkdownView, Modal, Plugin, PluginSettingTab, Setting} from 'obsidian';
+import {validateOpenAIApiKey} from "./utils/apiUtils";
 
 interface MyPluginSettings {
 	apiKey: string;
@@ -147,6 +148,9 @@ class SettingTab extends PluginSettingTab {
 
 		containerEl.empty();
 
+		const apiKeyStatus = document.createElement('div');
+		containerEl.appendChild(apiKeyStatus);
+
 		new Setting(containerEl)
 			.setName('GPT API Key')
 			.setDesc('Enter your GPT API key here')
@@ -154,8 +158,15 @@ class SettingTab extends PluginSettingTab {
 				.setPlaceholder('Enter your API key')
 				.setValue(this.plugin.settings.apiKey)
 				.onChange(async (value) => {
-					this.plugin.settings.apiKey = value;
-					await this.plugin.saveSettings();
+					if (validateOpenAIApiKey(value)) {
+						apiKeyStatus.textContent = "올바른 api키 형식입니다.";
+						apiKeyStatus.style.color = 'green';
+						this.plugin.settings.apiKey = value;
+						await this.plugin.saveSettings();
+					} else {
+						apiKeyStatus.textContent = "잘못된 api 키입니다.";
+						apiKeyStatus.style.color = 'red';
+					}
 				}));
 	}
 }
