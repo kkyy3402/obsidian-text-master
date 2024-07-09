@@ -1,21 +1,21 @@
-import {App, PluginSettingTab, Setting} from "obsidian";
-import TextMasterPlugin from "../main";
+import { App, PluginSettingTab, Setting } from 'obsidian'
+import TextMasterPlugin from '../main'
 
 export class SettingTab extends PluginSettingTab {
-	plugin: TextMasterPlugin;
+	plugin: TextMasterPlugin
 
 	constructor(app: App, plugin: TextMasterPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
+		super(app, plugin)
+		this.plugin = plugin
 	}
 
 	display(): void {
-		const {containerEl} = this;
+		const { containerEl } = this
 
-		containerEl.empty();
+		containerEl.empty()
 
-		const apiKeyStatus = document.createElement('div');
-		containerEl.appendChild(apiKeyStatus);
+		const apiKeyStatus = document.createElement('div')
+		containerEl.appendChild(apiKeyStatus)
 
 		new Setting(containerEl)
 			.setName('GPT API Key')
@@ -24,9 +24,9 @@ export class SettingTab extends PluginSettingTab {
 				.setPlaceholder('Enter your API key')
 				.setValue(this.plugin.settings.apiKey)
 				.onChange(async (value) => {
-					this.plugin.settings.apiKey = value;
-					await this.plugin.saveSettings();
-				}));
+					this.plugin.settings.apiKey = value
+					await this.plugin.saveSettings()
+				}))
 	}
 }
 
