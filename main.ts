@@ -1,5 +1,5 @@
 import { Editor, MarkdownView, Notice, Plugin } from 'obsidian'
-import { callGptApi } from './utils/ApiUtils'
+import { callGptApiSync } from './utils/ApiUtils'
 import { ActionSelectionModal } from './components/modal/ActionSelectionModal'
 import { ApiKeySetupModal } from './components/modal/ApiKeySetupModal'
 import { SettingTab } from './components/SettingTab'
@@ -21,18 +21,25 @@ export default class TextMasterPlugin extends Plugin {
 		new ActionSelectionModal(this.app, async (action: string, maxOutputStrLength: number) => {
 			const prompt = getPromptForTextGeneration(action, userInput, maxOutputStrLength)
 			const apiKey = this.settings.apiKey
-			const response = await callGptApi(prompt, apiKey)
+
+			editor.setValue(`${userInput}\n\n### GENERATED\n\n`)
+
+			// Sync GPT
+			const syncResponse = await callGptApiSync(prompt, apiKey)
+			editor.setValue(`${editor.getValue()}` + syncResponse)
+
+			// streaming GPT
+			// callGptApiStream(prompt, apiKey, (data: string) => {
+			// 	editor.setValue(`${editor.getValue()}` + data)
+			// })
+
 			new Notice('Creation is complete.')
-			editor.setValue(`${userInput}
-  
-### GENERATED   
-${response}`)
 		}).open()
 	}
 
 	async onload() {
-		console.info('HELLO!')
 		await this.loadSettings()
+
 
 		// Command to trigger GPT API
 		this.addCommand({
@@ -41,6 +48,7 @@ ${response}`)
 			hotkeys: [
 				{
 					modifiers: ['Ctrl'],
+
 					key: 'Enter',
 				},
 			],
